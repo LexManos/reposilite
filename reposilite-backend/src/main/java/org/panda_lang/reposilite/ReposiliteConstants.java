@@ -16,13 +16,17 @@
 
 package org.panda_lang.reposilite;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public final class ReposiliteConstants {
+    private static final Logger LOGGER = LoggerFactory.getLogger("Reposilite");
 
     public static final String NAME = "Reposilite";
 
-    public static final String VERSION = "2.9.26";
+    public static final String VERSION = loadVersion();
 
-    public static final String REMOTE_VERSION = "https://repo.panda-lang.org/org/panda-lang/reposilite/latest";
+    public static final String REMOTE_VERSION = ""; //"https://repo.panda-lang.org/org/panda-lang/reposilite/latest";
 
     public static final String CONFIGURATION_FILE_NAME = "reposilite.cdn";
 
@@ -32,4 +36,12 @@ public final class ReposiliteConstants {
 
     private ReposiliteConstants() { }
 
+    private static String loadVersion() {
+        LOGGER.debug("Version package {} from {}", ReposiliteConstants.class.getPackage(), ReposiliteConstants.class.getClassLoader());
+        String version = ReposiliteConstants.class.getPackage().getImplementationVersion();
+        if (version == null && System.getProperty("reposilite.tests.version") != null) version = System.getProperty("reposilite.tests.version");
+        if (version == null) throw new RuntimeException("Missing version, cannot continue");
+        LOGGER.debug("Found version {}", version);
+        return version;
+    }
 }

@@ -1,0 +1,157 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'net.minecraftforge.gradleutils'
+    id 'java'
+    id 'groovy'
+    id 'maven-publish'
+    id 'jacoco'
+}
+
+group = 'net.minecraftforge'
+base.archivesName = 'reposilite'
+description = 'reposilite-backend'
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
+gradleutils {
+    gitRoot = rootProject.file('.')
+}
+version = gradleutils.getTagOffsetVersion()
+logger.lifecycle('Version: ' + version)
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { // Needed for 'net.dzikoysk:cdn:1.8.0'
+        url = uri('https://repo.panda-lang.org/releases/')
+    }
+}
+
+jar {
+    //dependsOn(':frontend:build')
+    // Be sure to run frontend:build when editing anything in the front end so that these sources are updated
+    // Not hard linked so that the CI doesn't need NPM installed {TODO: build proper image?}
+    manifest {
+        attributes([
+            'Main-Class': 'org.panda_lang.reposilite.ReposiliteLauncher',
+            'Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+            'GitCommit': gradleutils.gitInfo.abbreviatedId,
+            'Git-Branch': gradleutils.gitInfo.branch,
+            'Multi-Release': true // Some shaded deps
+        ] as LinkedHashMap)
+        attributes([
+            'Specification-Title':      'Reposilite',
+            'Specification-Vendor':     'Forge Development LLC',
+            'Specification-Version':    '2',
+            'Implementation-Title':     'Forge Reposilite',
+            'Implementation-Version':   project.version,
+            'Implementation-Vendor':    'Forge'
+        ] as LinkedHashMap, 'org/panda_lang/reposilite/')
+    }
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy(jacocoTestReport)
+}
+
+jacocoTestReport.dependsOn(test)
+
+shadowJar {
+    mergeServiceFiles()
+    exclude('META-INF/resources/')
+    exclude('META-INF/com.android.tools/')
+    exclude('META-INF/maven/')
+    exclude('META-INF/proguard/')
+    exclude('META-INF/NOTICE*')
+    exclude('META-INF/LICENSE*')
+    exclude('META-INF/DEPENDENCIES')
+    exclude('META-INF/ASL*')
+    exclude('META-INF/LGPL*')
+    exclude('META-INF/*kotlin_module')
+}
+
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.15.2'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2'
+    implementation 'com.google.guava:guava:30.1.1-jre'
+    implementation 'com.google.http-client:google-http-client:1.39.2'
+    implementation 'commons-io:commons-io:2.8.0'
+    implementation 'commons-logging:commons-logging:1.2'
+    implementation 'info.picocli:picocli:4.6.1'
+    implementation 'io.javalin:javalin-openapi:4.6.8'
+    implementation 'io.javalin:javalin:4.6.8'
+    implementation 'net.dzikoysk:cdn:1.8.0'
+    implementation 'org.apache.commons:commons-collections4:4.4'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+    implementation 'org.apache.httpcomponents:httpcore:4.4.14'
+    implementation 'org.apache.maven:maven-repository-metadata:3.8.3'
+    implementation 'org.eclipse.jetty:jetty-server:9.4.40.v20210413'
+    implementation 'org.eclipse.jetty:jetty-webapp:9.4.40.v20210413'
+    implementation 'org.eclipse.jetty.websocket:websocket-server:9.4.40.v20210413'
+    implementation 'org.fusesource.jansi:jansi:2.3.2'
+    implementation 'org.springframework.security:spring-security-crypto:5.4.6'
+    implementation 'org.tinylog:slf4j-tinylog:2.3.1'
+    implementation 'org.tinylog:tinylog-api:2.3.1'
+    implementation 'org.tinylog:tinylog-impl:2.3.1'
+    implementation 'org.yaml:snakeyaml:1.28'
+    
+    testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2'
+    testImplementation 'com.fasterxml.jackson.module:jackson-module-paranamer:2.15.2'
+    testImplementation 'com.google.http-client:google-http-client-jackson2:1.39.2'
+    testImplementation 'org.mockito:mockito-inline:3.9.0'
+    testImplementation 'org.mockito:mockito-core:3.9.0'
+    testImplementation 'org.codehaus.groovy:groovy:3.0.7'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
+}
+
+java {
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId 'reposilite'
+
+            //TODO: For now we minimize the shadowJar, if that fails we might need a different solution.
+            from components.java
+
+            pom {
+                name = 'Reposilite'
+                description = 'Lightweight repository manager for Maven based artifacts.'
+                url = 'https://github.com/MinecraftForge/Reposilite'
+                scm {
+                    url = 'https://github.com/MinecraftForge/Reposilite'
+                    connection = 'scm:git:git://github.com/MinecraftForge/Reposilite.git'
+                    developerConnection = 'scm:git:git@github.com:MinecraftForge/Reposilite.git'
+                }
+                issueManagement {
+                    system = 'github'
+                    url = 'https://github.com/MinecraftForge/Reposilite/issues'
+                }
+
+                licenses {
+                    license {
+                        name = 'Apache 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'LexManos'
+                        name = 'Lex Manos'
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven gradleutils.getPublishingForgeMaven()
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}

@@ -18,7 +18,9 @@ package org.panda_lang.reposilite.utils;
 
 import org.panda_lang.utilities.commons.FileUtils;
 import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.representer.Representer;
 
 import java.io.File;
@@ -27,13 +29,18 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 public final class YamlUtils {
+    private static final Constructor CONSTRUCTOR = new Constructor(new LoaderOptions() {{
+        setTagInspector((tag) -> {
+            return tag.getClassName().startsWith("org.panda_lang.");
+        });
+    }});
 
-    private static final Representer REPRESENTER = new Representer() {{
+    private static final Representer REPRESENTER = new Representer(new DumperOptions()) {{
         this.getPropertyUtils().setSkipMissingProperties(true);
         this.setDefaultScalarStyle(DumperOptions.ScalarStyle.DOUBLE_QUOTED);
     }};
 
-    private static final Yaml YAML = new Yaml(REPRESENTER);
+    private static final Yaml YAML = new Yaml(CONSTRUCTOR, REPRESENTER);
 
     private YamlUtils() { }
 

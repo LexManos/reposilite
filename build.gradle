@@ -1,0 +1,18 @@
+plugins {
+    id 'com.avast.gradle.docker-compose' version '0.14.9'
+    id 'net.minecraftforge.gradleutils' version '2.+'
+}
+
+evaluationDependsOnChildren()
+version = project(':backend').version
+
+composeBuild {
+    dependsOn(':backend:build')
+    doFirst {
+        dockerCompose.environment.put('REP_VERSION', project(':backend').version)
+    }
+}
+
+changelog {
+    fromTag '2.12'
+}

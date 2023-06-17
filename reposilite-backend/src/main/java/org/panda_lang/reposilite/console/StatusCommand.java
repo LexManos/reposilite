@@ -46,12 +46,16 @@ final class StatusCommand implements ReposiliteCommand {
         response.add("  Disk usage: " + FilesUtils.humanReadableByteCount(reposilite.getRepositoryService().getDiskQuota().getUsage()));
         response.add("  Cached metadata: " + reposilite.getMetadataService().getCacheSize());
         response.add("  Exceptions: " + reposilite.getFailureService().getFailures().size());
+        if (latestVersion != null)
         response.add("  Latest version of reposilite: " + latestVersion);
 
         return true;
     }
 
     private String getVersion() {
+        if (ReposiliteConstants.REMOTE_VERSION.isEmpty())
+            return null;
+
         String latest = IOUtils
                 .fetchContent(ReposiliteConstants.REMOTE_VERSION)
                 .orElseGet(ioException -> ReposiliteConstants.REMOTE_VERSION + " is unavailable: " + ioException.getMessage());

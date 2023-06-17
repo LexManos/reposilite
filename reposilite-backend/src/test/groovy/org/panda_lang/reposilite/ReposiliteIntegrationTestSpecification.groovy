@@ -54,6 +54,7 @@ abstract class ReposiliteIntegrationTestSpecification extends ReposiliteTestSpec
     protected Reposilite reposilite(String port, File workingDirectory, String... args) {
         FileUtils.copyDirectory(new File("src/test/workspace/repositories"), new File(workingDirectory, "repositories"))
         System.setProperty("reposilite.port", port)
+        System.setProperty("reposilite.tests.version", "0.0");
         properties.forEach({ property, value -> System.setProperty(property, value) })
 
         try {
