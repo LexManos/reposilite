@@ -46,6 +46,9 @@ abstract class ReposiliteIntegrationTestSpecification extends ReposiliteTestSpec
         ReposiliteWriter.clear()
         reposilite = reposilite(workingDirectory)
         reposilite.launch()
+
+        while(!reposilite.repositoryService.diskQuota.ready)
+            Thread.sleep(10);
     }
 
     protected Reposilite reposilite(File workingDirectory, String... args) {

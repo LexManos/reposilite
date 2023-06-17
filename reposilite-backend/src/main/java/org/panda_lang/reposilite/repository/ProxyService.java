@@ -166,6 +166,11 @@ public final class ProxyService {
     private Option<CompletableFuture<Result<LookupResponse, ErrorDto>>> store(ReposiliteContext context, String uri, HttpResponse remoteResponse) {
         DiskQuota diskQuota = repositoryService.getDiskQuota();
 
+        if (!diskQuota.isReady()) {
+            Reposilite.getLogger().warn("Disk Space Still Calculating - Cannot store proxied artifact " + uri);
+            return Option.none();
+        }
+
         if (!diskQuota.hasUsableSpace()) {
             Reposilite.getLogger().warn("Out of disk space - Cannot store proxied artifact " + uri);
             return Option.none();

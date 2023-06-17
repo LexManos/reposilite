@@ -27,9 +27,14 @@ public final class DiskQuota {
     private final AtomicLong quota;
     private final AtomicLong usage;
 
-    DiskQuota(long quota, long usage) {
+    DiskQuota(long quota, File directory) {
         this.quota = new AtomicLong(quota);
-        this.usage = new AtomicLong(usage);
+        this.usage = new AtomicLong(-1);
+        // Run this in the background because it can take some time. We want to be able to serve files while this is calculating.
+        new Thread(() -> {
+            long usage = FileUtils.sizeOfDirectory(directory);
+            this.usage.set(usage);
+        }).start();
     }
 
     void allocate(long size) {
@@ -37,29 +42,25 @@ public final class DiskQuota {
     }
 
     public boolean hasUsableSpace() {
-        return usage.get() < quota.get();
+        return !isReady() ? false : usage.get() < quota.get();
     }
 
     public long getUsage() {
         return usage.get();
     }
 
-    static DiskQuota ofPercentage(File workingDirectory, long usage, int percentage) {
-        return new DiskQuota(Math.round(workingDirectory.getTotalSpace() * (percentage / 100D)), usage);
-    }
-
-    static DiskQuota ofSize(long usage, String size) {
-        return new DiskQuota(FilesUtils.displaySizeToBytesCount(size), usage);
+    // Don't allow using space while we are calculating
+    public boolean isReady() {
+        return usage.get() != -1;
     }
 
     static DiskQuota of(File workingDirectory, String value) {
-        long usage = FileUtils.sizeOfDirectory(workingDirectory);
-
         if (value.endsWith("%")) {
-            return ofPercentage(workingDirectory,  usage, Integer.parseInt(value.substring(0, value.length() - 1)));
+            int percentage = Integer.parseInt(value.substring(0, value.length() - 1));
+            return new DiskQuota(Math.round(workingDirectory.getTotalSpace() * (percentage / 100D)), workingDirectory);
         }
 
-        return ofSize(usage, value);
+        return new DiskQuota(FilesUtils.displaySizeToBytesCount(value), workingDirectory);
     }
 
 }

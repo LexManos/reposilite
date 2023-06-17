@@ -78,6 +78,11 @@ public final class DeployService {
             return ResponseUtils.error(HttpStatus.SC_UNAUTHORIZED, "Cannot deploy artifact without write permission");
         }
 
+        if (!repositoryService.getDiskQuota().isReady()) {
+            // I have no idea how to unit test this as it's a race... So ignore it for coverage I think.
+            return ResponseUtils.error(HttpStatus.SC_SERVICE_UNAVAILABLE, "Server is still starting, try again later");
+        }
+
         if (!repositoryService.getDiskQuota().hasUsableSpace()) {
             return ResponseUtils.error(HttpStatus.SC_INSUFFICIENT_STORAGE, "Out of disk space");
         }
