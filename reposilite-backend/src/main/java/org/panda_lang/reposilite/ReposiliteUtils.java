@@ -47,7 +47,7 @@ public final class ReposiliteUtils {
             uri = uri.replace("//", "/");
         }
 
-        if (uri.startsWith("/")) {
+        while (uri.startsWith("/")) {
             uri = uri.substring(1);
         }
 

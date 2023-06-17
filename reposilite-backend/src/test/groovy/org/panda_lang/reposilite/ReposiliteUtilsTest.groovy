@@ -64,11 +64,23 @@ class ReposiliteUtilsTest {
         assertTrue ReposiliteUtils.normalizeUri(true, REPOSITORY_SERVICE, "~/home").isEmpty()
         assertTrue ReposiliteUtils.normalizeUri(true, REPOSITORY_SERVICE, "../../../../monkas").isEmpty()
         assertTrue ReposiliteUtils.normalizeUri(true, REPOSITORY_SERVICE, "C:\\").isEmpty()
+        assertTrue ReposiliteUtils.normalizeUri(true, REPOSITORY_SERVICE, "windows\\dir\\seperator").isEmpty()
     }
 
     @Test
     void 'should not rewrite paths' () {
         assertEquals "without/repo/", ReposiliteUtils.normalizeUri(false, REPOSITORY_SERVICE, "without/repo/").get()
+    }
+
+    @Test
+    void 'should strip leading directories' () {
+        assertEquals "some/directory", ReposiliteUtils.normalizeUri(false, REPOSITORY_SERVICE, "//some/directory").get()
+    }
+
+    @Test
+    void 'should strip empty directories' () {
+        assertEquals "some/directory", ReposiliteUtils.normalizeUri(false, REPOSITORY_SERVICE, "//some//directory").get()
+        assertEquals "some/directory", ReposiliteUtils.normalizeUri(false, REPOSITORY_SERVICE, "//some////directory").get()
     }
 
 }
